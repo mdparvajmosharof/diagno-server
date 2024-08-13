@@ -79,6 +79,22 @@ async function run() {
       res.send(result)
     })
 
+    app.patch("/update/profile/:email",async(req,res) =>{
+      const body = req.body;
+      
+      const email = {email : req.params.email};
+      const data = {
+        $set: {
+          name: body.name, 
+          photo_url: body.photo_url, 
+          blood: body.blood, 
+          districtName: body.districtName, 
+          upazila: body.upazila}
+      }
+      const result = await usersCollection.updateOne(email, data);
+      res.send(result)
+    })
+
     // Add a new test
     app.post("/tests", async (req, res) => {
       const tests = req.body;
