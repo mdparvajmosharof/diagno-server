@@ -32,6 +32,7 @@ async function run() {
 
     const testsCollection = client.db("testsdb").collection("tests");
     const usersCollection = client.db("testsdb").collection("users");
+    const bannerCollection = client.db("testsdb").collection("banner");
     
     
 
@@ -102,6 +103,12 @@ async function run() {
       res.send(result);
     });
 
+    //get banner data
+    app.get("/banner", async(req, res)=>{
+      const banner = req.body;
+      const result = await bannerCollection.find(banner).toArray();
+      res.send(result);
+    })
 
    
     
