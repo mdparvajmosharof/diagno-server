@@ -8,7 +8,7 @@ const app = express();
 require("dotenv").config();
 app.use(cors({
   origin: [
-    'http://localhost:5173',"https://alterno-auth.web.app", "https://5173-idx-b9a12-client-side-mdparvajmosharof-1723160812873.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/" //todo
+    'http://localhost:5173',"https://diagno-auth.web.app", "https://5173-idx-b9a12-client-side-mdparvajmosharof-1723160812873.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/" //todo
   ],
   credentials: true
 }));
