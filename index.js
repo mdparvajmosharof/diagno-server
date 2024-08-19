@@ -33,6 +33,7 @@ async function run() {
     const testsCollection = client.db("testsdb").collection("tests");
     const usersCollection = client.db("testsdb").collection("users");
     const bannerCollection = client.db("testsdb").collection("banner");
+    const bookedCollection = client.db("testsdb").collection("booked");
     
     
 
@@ -107,6 +108,12 @@ async function run() {
     app.get("/banner", async(req, res)=>{
       const banner = req.body;
       const result = await bannerCollection.find(banner).toArray();
+      res.send(result);
+    })
+
+    app.post("/booked", async(req,res)=>{
+      const body = req.body;
+      const result = await bookedCollection.insertOne(body);
       res.send(result);
     })
 
