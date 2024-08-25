@@ -49,6 +49,17 @@ async function run() {
       res.send(result);
     })
 
+    app.patch("/test/:id", async(req, res) =>{
+      const id = req.params;
+      const {slots} = req.body;
+      const result = await testsCollection.updateOne({_id: new ObjectId(id)}, {
+        $set: {
+          slots : slots
+        }
+      })
+      res.send(result)
+    })
+
     app.get("/testsDate", async (req, res) =>{
       const {date} = req.query;
       const result = await testsCollection.find({date : {$regex : `^${date}`}}).toArray();
