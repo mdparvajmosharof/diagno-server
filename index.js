@@ -128,6 +128,17 @@ async function run() {
       res.send(result);
     })
 
+    app.get("/booked", async(req, res)=>{
+      const query = req.query;
+      const result = await bookedCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.delete("/booked/:id", async(req, res)=>{
+      const id = req.params;
+      const result = await bookedCollection.deleteOne({ _id : new ObjectId(id)});
+      res.send(result);
+    })
    
     
 
