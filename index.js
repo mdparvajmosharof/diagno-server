@@ -108,6 +108,28 @@ async function run() {
       res.send(result)
     })
 
+    app.patch("/users/active/:id", async(req, res)=>{
+      const id = {_id : new ObjectId(req.params.id)};
+      const data = {
+        $set:{
+          isActive : "Active"
+        }
+      }
+      const result = await usersCollection.updateOne(id, data);
+      res.send(result);
+    })
+
+    app.patch("/users/blocked/:id", async(req, res)=>{
+      const id = {_id : new ObjectId(req.params.id)};
+      const data = {
+        $set:{
+          isActive : "blocked"
+        }
+      }
+      const result = await usersCollection.updateOne(id, data);
+      res.send(result);
+    })
+
     // Add a new test
     app.post("/tests", async (req, res) => {
       const tests = req.body;
@@ -140,6 +162,7 @@ async function run() {
       res.send(result);
     })
    
+    
     
 
 
