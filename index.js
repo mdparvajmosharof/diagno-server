@@ -58,6 +58,44 @@ async function run() {
       })
     }
 
+    const verifyAdmin = async (req, res, next)=>{
+      const email = req.decoded.email;
+      const query = {email: email};
+      const user = await usersCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+          res.status(403).send({message: 'forbidden access'})
+      }
+      next()
+    }
+
+    app.get('/users/admin/:email', verifyToken, async(req, res) =>{
+      const email = req.params.email;
+      if(email !== req.decoded.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
+
+      const query = {email : email};
+      const user = await usersCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin';
+      }
+      res.send({admin})
+    })
+
+    app.patch("/users/admin/:id",verifyToken, verifyAdmin, async(req, res)=>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const data = {
+        $set:{
+          role: 'admin'
+        }
+      }
+      const result = await usersCollection.updateOne(filter, data);
+      res.send(result);
+    })
+
     // Get all tests
     app.get('/tests', async(req, res) => {
       const currentDate = new Date().toISOString().split('T')[0];
@@ -100,14 +138,14 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/users/:email", async(req, res)=> {
+    app.get("/users/:email",verifyToken, async(req, res)=> {
       const result = await usersCollection.findOne({email : req.params.email})
       res.send(result)
     })
 
     //get user
 
-    app.get("/users",verifyToken , async(req, res)=> {
+    app.get("/users",verifyToken ,verifyAdmin, async(req, res)=> {
       const users = req.body
       const result = await usersCollection.find(users).toArray()
       res.send(result)
@@ -129,7 +167,7 @@ async function run() {
       res.send(result)
     })
 
-    app.patch("/users/active/:id", async(req, res)=>{
+    app.patch("/users/active/:id",verifyToken,verifyAdmin, async(req, res)=>{
       const id = {_id : new ObjectId(req.params.id)};
       const data = {
         $set:{
@@ -140,7 +178,7 @@ async function run() {
       res.send(result);
     })
 
-    app.patch("/users/blocked/:id", async(req, res)=>{
+    app.patch("/users/blocked/:id",verifyToken, verifyAdmin, async(req, res)=>{
       const id = {_id : new ObjectId(req.params.id)};
       const data = {
         $set:{
@@ -157,6 +195,14 @@ async function run() {
       const result = await testsCollection.insertOne(tests);
       res.send(result);
     });
+
+    app.delete('/test/:id', async(req, res)=>{
+      const id = req.params.id;
+      const result = await testsCollection.deleteOne({_id: new ObjectId(id)})
+      res.send(result)
+    })
+
+    
 
     //get banner data
     app.get("/banner", async(req, res)=>{
