@@ -9,7 +9,7 @@ const app = express();
 require("dotenv").config();
 app.use(cors({
   origin: [
-    'http://localhost:5173',"https://diagno-auth.web.app", "https://5173-idx-b9a12-client-side-mdparvajmosharof-1723160812873.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/" //todo
+    'http://localhost:5173', "https://diagno-auth.web.app", "https://5173-idx-b9a12-client-side-mdparvajmosharof-1723160812873.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/" //todo
   ],
   credentials: true
 }));
@@ -35,60 +35,60 @@ async function run() {
     const usersCollection = client.db("testsdb").collection("users");
     const bannerCollection = client.db("testsdb").collection("banner");
     const bookedCollection = client.db("testsdb").collection("booked");
-    
+
     //jwt 
-    app.post("/jwt", async(req, res)=>{
+    app.post("/jwt", async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
-      res.send({token})
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token })
     })
 
     //midleware
-    const verifyToken = (req, res, next)=>{
-      if(!req.headers.authorization){
-        return res.status(401).send({message  : "unauthorized access"});
-       }
+    const verifyToken = (req, res, next) => {
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
       const token = req.headers.authorization.split(' ')[1];
-      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
-        if(err){
-          return res.status(401).send({message  : "unauthorized access"});
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: "unauthorized access" });
         }
         req.decoded = decoded;
         next()
       })
     }
 
-    const verifyAdmin = async (req, res, next)=>{
+    const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
-      const query = {email: email};
+      const query = { email: email };
       const user = await usersCollection.findOne(query);
       const isAdmin = user?.role === 'admin';
-      if(!isAdmin){
-          res.status(403).send({message: 'forbidden access'})
+      if (!isAdmin) {
+        res.status(403).send({ message: 'forbidden access' })
       }
       next()
     }
 
-    app.get('/users/admin/:email', verifyToken, async(req, res) =>{
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      if(email !== req.decoded.email){
-        return res.status(403).send({message: 'forbidden access'})
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
       }
 
-      const query = {email : email};
+      const query = { email: email };
       const user = await usersCollection.findOne(query);
       let admin = false;
-      if(user){
+      if (user) {
         admin = user?.role === 'admin';
       }
-      res.send({admin})
+      res.send({ admin })
     })
 
-    app.patch("/users/admin/:id",verifyToken, verifyAdmin, async(req, res)=>{
+    app.patch("/users/admin/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const filter = {_id: new ObjectId(id)};
+      const filter = { _id: new ObjectId(id) };
       const data = {
-        $set:{
+        $set: {
           role: 'admin'
         }
       }
@@ -97,92 +97,113 @@ async function run() {
     })
 
     // Get all tests
-    app.get('/tests', async(req, res) => {
+    app.get('/tests', async (req, res) => {
       const currentDate = new Date().toISOString().split('T')[0];
-      const result = await testsCollection.find({date : {$gte:currentDate}}).toArray();
+      const result = await testsCollection.find({ date: { $gte: currentDate } }).toArray();
       res.send(result);
     });
 
-    app.get("/test/:id", async(req, res)=>{
-      const result = await testsCollection.findOne({_id : new ObjectId(req.params.id)});
+    app.get("/test/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await testsCollection.findOne(query);
       res.send(result);
     })
 
-    app.patch("/test/:id", async(req, res) =>{
-      const id = req.params;
-      const {slots} = req.body;
-      const result = await testsCollection.updateOne({_id: new ObjectId(id)}, {
+    app.patch("/test/:id", async (req, res) => {
+      const id = req.params.id;
+      const { slots } = req.body;
+      const result = await testsCollection.updateOne({ _id: new ObjectId(id) }, {
         $set: {
-          slots : slots
+          slots: slots
         }
       })
       res.send(result)
     })
 
-    app.get("/testsDate", async (req, res) =>{
-      const {date} = req.query;
-      const result = await testsCollection.find({date : {$regex : `^${date}`}}).toArray();
+    app.patch("/test/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const data = req.body;
+      const result = await testsCollection.updateOne(query, {
+        $set: {
+          image: data.image,
+          date: data.date,
+          slots: date.slots,
+          title: data.title,
+          short_description: data.short_description,
+          price: data.price
+        }
+      })
+      res.send(result);
+    })
+
+    app.get("/testsDate", async (req, res) => {
+      const { date } = req.query;
+      const result = await testsCollection.find({ date: { $regex: `^${date}` } }).toArray();
       res.send(result);
     })
 
     //post user
 
-    app.post("/users", async(req, res)=>{
+    app.post("/users", async (req, res) => {
       const users = req.body;
-      const query = {email: users.email}
+      const query = { email: users.email }
       const existingEmail = await usersCollection.findOne(query);
-      if(existingEmail){
+      if (existingEmail) {
         return res.send({ message: 'user already exists', insertedId: null })
       }
       const result = await usersCollection.insertOne(users);
       res.send(result);
     })
 
-    app.get("/users/:email",verifyToken, async(req, res)=> {
-      const result = await usersCollection.findOne({email : req.params.email})
+    app.get("/users/:email", verifyToken, async (req, res) => {
+      const result = await usersCollection.findOne({ email: req.params.email })
       res.send(result)
     })
 
     //get user
 
-    app.get("/users",verifyToken ,verifyAdmin, async(req, res)=> {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const users = req.body
       const result = await usersCollection.find(users).toArray()
       res.send(result)
     })
 
-    app.patch("/update/profile/:email",async(req,res) =>{
+    app.patch("/update/profile/:email", async (req, res) => {
       const body = req.body;
-      
-      const email = {email : req.params.email};
+
+      const email = { email: req.params.email };
       const data = {
         $set: {
-          name: body.name, 
-          photo_url: body.photo_url, 
-          blood: body.blood, 
-          districtName: body.districtName, 
-          upazila: body.upazila}
+          name: body.name,
+          photo_url: body.photo_url,
+          blood: body.blood,
+          districtName: body.districtName,
+          upazila: body.upazila
+        }
       }
       const result = await usersCollection.updateOne(email, data);
       res.send(result)
     })
 
-    app.patch("/users/active/:id",verifyToken,verifyAdmin, async(req, res)=>{
-      const id = {_id : new ObjectId(req.params.id)};
+    app.patch("/users/active/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const id = { _id: new ObjectId(req.params.id) };
       const data = {
-        $set:{
-          isActive : "Active"
+        $set: {
+          isActive: "Active"
         }
       }
       const result = await usersCollection.updateOne(id, data);
       res.send(result);
     })
 
-    app.patch("/users/blocked/:id",verifyToken, verifyAdmin, async(req, res)=>{
-      const id = {_id : new ObjectId(req.params.id)};
+    app.patch("/users/blocked/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const id = { _id: new ObjectId(req.params.id) };
       const data = {
-        $set:{
-          isActive : "blocked"
+        $set: {
+          isActive: "blocked"
         }
       }
       const result = await usersCollection.updateOne(id, data);
@@ -196,41 +217,48 @@ async function run() {
       res.send(result);
     });
 
-    app.delete('/test/:id', async(req, res)=>{
+    app.delete('/test/:id', async (req, res) => {
       const id = req.params.id;
-      const result = await testsCollection.deleteOne({_id: new ObjectId(id)})
+      const result = await testsCollection.deleteOne({ _id: new ObjectId(id) })
       res.send(result)
     })
 
-    
+
 
     //get banner data
-    app.get("/banner", async(req, res)=>{
+    app.get("/banner", async (req, res) => {
       const banner = req.body;
       const result = await bannerCollection.find(banner).toArray();
       res.send(result);
     })
 
-    app.post("/booked", async(req,res)=>{
+    app.post("/booked", async (req, res) => {
       const body = req.body;
       const result = await bookedCollection.insertOne(body);
       res.send(result);
     })
 
-    app.get("/booked", async(req, res)=>{
+    app.get("/booked", async (req, res) => {
       const query = req.query;
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
 
-    app.delete("/booked/:id", async(req, res)=>{
-      const id = req.params;
-      const result = await bookedCollection.deleteOne({ _id : new ObjectId(id)});
+    app.get("/booked/:id", async(req, res)=>{
+      const id = req.params.id;
+      const query = {testId: id}
+      const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
-   
-    
-    
+
+    app.delete("/booked/:id", async (req, res) => {
+      const id = req.params;
+      const result = await bookedCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    })
+
+
+
 
 
     // Send a ping to confirm a successful connection
