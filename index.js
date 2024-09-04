@@ -226,11 +226,45 @@ async function run() {
 
 
     //get banner data
+
+    app.post("/banner", async (req, res) => {
+      const banner = req.body;
+      const result = await bannerCollection.insertOne(banner);
+      res.send(result);
+    })
+
     app.get("/banner", async (req, res) => {
       const banner = req.body;
       const result = await bannerCollection.find(banner).toArray();
       res.send(result);
     })
+
+    app.patch("/banner/active/:id", async (req, res) => {
+      const id = req.params.id;
+
+      try {
+
+        await bannerCollection.updateMany({}, {
+          $set: {
+            isActive: false
+          }
+        });
+
+        const result = await bannerCollection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              isActive: true
+            }
+          }
+        );
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Failed to update banner status", error });
+      }
+    });
+
 
     app.post("/booked", async (req, res) => {
       const body = req.body;
@@ -239,23 +273,45 @@ async function run() {
     })
 
     app.get("/booked", async (req, res) => {
-      const query = req.query;
+      const email = req.query.email;
+      const query = {email: email}
+      console.log(email)
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
 
-    app.get("/booked/:id", async(req, res)=>{
-      const id = req.params.id;
-      const query = {testId: id}
+    app.get("/booked/delevered", async (req, res) => {
+      const query = {report : "delivered" };
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
+
+    app.get("/booked/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { testId: id }
+      const result = await bookedCollection.find(query).toArray();
+      res.send(result);
+    })
+
+  
 
     app.delete("/booked/:id", async (req, res) => {
       const id = req.params;
       const result = await bookedCollection.deleteOne({ _id: new ObjectId(id) });
       res.send(result);
     })
+
+    app.patch("/booked/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await bookedCollection.updateOne({ _id: new ObjectId(id) }, {
+        $set: {
+          report: "delivered"
+        }
+      })
+      res.send(result)
+    })
+
+
 
 
 
