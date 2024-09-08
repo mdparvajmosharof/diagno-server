@@ -35,6 +35,7 @@ async function run() {
     const usersCollection = client.db("testsdb").collection("users");
     const bannerCollection = client.db("testsdb").collection("banner");
     const bookedCollection = client.db("testsdb").collection("booked");
+    const recommendationCollection = client.db("testsdb").collection("recommendation");
 
     //jwt 
     app.post("/jwt", async (req, res) => {
@@ -348,7 +349,10 @@ async function run() {
     })
 
 
-
+    app.get("/recommendation", async(req, res )=>{
+      const result = await recommendationCollection.find().toArray();
+      res.send(result)
+    })
 
 
     // Send a ping to confirm a successful connection
