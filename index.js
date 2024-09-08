@@ -105,7 +105,6 @@ async function run() {
 
     app.get("/test/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id)
       const query = { _id: new ObjectId(id) }
       const result = await testsCollection.findOne(query);
       res.send(result);
@@ -275,7 +274,6 @@ async function run() {
     app.get("/booked", async (req, res) => {
       const email = req.query.email;
       const query = {email: email}
-      console.log(email)
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
@@ -293,7 +291,12 @@ async function run() {
       res.send(result);
     })
 
-  
+    app.get("/booked/test/:id", async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await bookedCollection.findOne(query);
+      res.send(result)
+    })
 
     app.delete("/booked/:id", async (req, res) => {
       const id = req.params;
@@ -305,7 +308,9 @@ async function run() {
       const id = req.params.id;
       const result = await bookedCollection.updateOne({ _id: new ObjectId(id) }, {
         $set: {
-          report: "delivered"
+          report: "delivered",
+          published : new Date().toLocaleDateString(),
+          result : "All Good"
         }
       })
       res.send(result)
