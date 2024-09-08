@@ -278,6 +278,12 @@ async function run() {
       res.send(result);
     })
 
+    app.get("/booked/test", async (req, res) => {
+      const query = req.body
+      const result = await bookedCollection.find(query).toArray();
+      res.send(result);
+    })
+
     app.get("/booked/delevered", async (req, res) => {
       const query = {report : "delivered" };
       const result = await bookedCollection.find(query).toArray();
@@ -316,7 +322,30 @@ async function run() {
       res.send(result)
     })
 
+    app.get("/featured", async(req, res)=>{
+      const featuredTest = await bookedCollection.aggregate([
+        {
+          $group: {
+            _id: { $toObjectId: "$testId" }, 
+            count: { $sum: 1 } 
+          }
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 },  
+        {
+          $lookup: {
+            from: 'tests', 
+            localField: '_id',  
+            foreignField: '_id',
+            as: 'testDetails'
+          }
+        },
+        { $unwind: "$testDetails" } 
+      ]).toArray();
 
+      res.send(featuredTest)
+
+    })
 
 
 
