@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require("cors");
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_SK);
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -274,7 +275,7 @@ async function run() {
 
     app.get("/booked", async (req, res) => {
       const email = req.query.email;
-      const query = {email: email}
+      const query = { email: email }
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
@@ -286,7 +287,7 @@ async function run() {
     })
 
     app.get("/booked/delevered", async (req, res) => {
-      const query = {report : "delivered" };
+      const query = { report: "delivered" };
       const result = await bookedCollection.find(query).toArray();
       res.send(result);
     })
@@ -298,9 +299,9 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/booked/test/:id", async(req, res)=>{
+    app.get("/booked/test/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await bookedCollection.findOne(query);
       res.send(result)
     })
@@ -316,32 +317,32 @@ async function run() {
       const result = await bookedCollection.updateOne({ _id: new ObjectId(id) }, {
         $set: {
           report: "delivered",
-          published : new Date().toLocaleDateString(),
-          result : "All Good"
+          published: new Date().toLocaleDateString(),
+          result: "All Good"
         }
       })
       res.send(result)
     })
 
-    app.get("/featured", async(req, res)=>{
+    app.get("/featured", async (req, res) => {
       const featuredTest = await bookedCollection.aggregate([
         {
           $group: {
-            _id: { $toObjectId: "$testId" }, 
-            count: { $sum: 1 } 
+            _id: { $toObjectId: "$testId" },
+            count: { $sum: 1 }
           }
         },
         { $sort: { count: -1 } },
-        { $limit: 10 },  
+        { $limit: 10 },
         {
           $lookup: {
-            from: 'tests', 
-            localField: '_id',  
+            from: 'tests',
+            localField: '_id',
             foreignField: '_id',
             as: 'testDetails'
           }
         },
-        { $unwind: "$testDetails" } 
+        { $unwind: "$testDetails" }
       ]).toArray();
 
       res.send(featuredTest)
@@ -349,10 +350,29 @@ async function run() {
     })
 
 
-    app.get("/recommendation", async(req, res )=>{
+    app.get("/recommendation", async (req, res) => {
       const result = await recommendationCollection.find().toArray();
       res.send(result)
     })
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100)
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: [
+          "card",
+          "link"
+        ],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret
+        // // [DEV]: For demo purposes only, you should avoid exposing the PaymentIntent ID in the client-side code.
+        // dpmCheckerLink: `https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymentIntent.id}`,
+      });
+    });
 
 
     // Send a ping to confirm a successful connection
