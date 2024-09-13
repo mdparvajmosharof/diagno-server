@@ -3,7 +3,8 @@ const express = require('express');
 const cors = require("cors");
 const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_SK);
+const Stripe = require('stripe');
+const stripe = Stripe('sk_test_51Px96vHMOBiiyLUHHi7RWoEDKomyxmKH8skYXBJ4JtDDN4xQ1EgUiz2vOxczm78WaxXeQS0aARNcZILPlu4LI8rx00cWHBH8dU');
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -358,6 +359,7 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100)
+      console.log(amount)
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
