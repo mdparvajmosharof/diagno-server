@@ -11,7 +11,7 @@ const app = express();
 require("dotenv").config();
 app.use(cors({
   origin: [
-    'http://localhost:5173', "https://diagno-auth.web.app", "https://5173-idx-b9a12-client-side-mdparvajmosharof-1723160812873.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev/" //todo
+    'http://localhost:5173', "https://diagno-auth.web.app" //todo
   ],
   credentials: true
 }));
@@ -142,8 +142,31 @@ async function run() {
     })
 
     app.get("/testsDate", async (req, res) => {
-      const { date } = req.query;
-      const result = await testsCollection.find({ date: { $regex: `^${date}` } }).toArray();
+      const { date, minPrice, maxPrice, name } = req.query;
+
+      // console.log(req.query);
+
+      const searchCriteria = {};
+      
+      if(date){
+        searchCriteria.date = {$regex : `^${date}`}
+      }
+
+      if(minPrice && maxPrice){
+        searchCriteria.price = {
+          $gte : parseFloat(minPrice),
+          $lte : parseFloat(maxPrice)
+        }
+      }
+
+      if(name)[
+        searchCriteria.title = {$regex : name, $options : 'i'} 
+      ]
+
+      // console.log(searchCriteria)
+
+      const result = await testsCollection.find(searchCriteria).toArray();
+
       res.send(result);
     })
 
