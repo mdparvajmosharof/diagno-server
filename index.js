@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const Stripe = require('stripe');
 const stripe = Stripe('sk_test_51Px96vHMOBiiyLUHHi7RWoEDKomyxmKH8skYXBJ4JtDDN4xQ1EgUiz2vOxczm78WaxXeQS0aARNcZILPlu4LI8rx00cWHBH8dU');
+// const stripe = Stripe(process.env.STRIPE_SK);
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -357,7 +358,7 @@ async function run() {
           }
         },
         { $sort: { count: -1 } },
-        { $limit: 10 },
+        { $limit: 9 },
         {
           $lookup: {
             from: 'tests',
